@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "awslabs.ecs-mcp-server": {
+      "command": "uvx",
+      "args": ["--from", "awslabs-ecs-mcp-server", "ecs-mcp-server"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "ALLOW_WRITE": "true",
+        "ALLOW_SENSITIVE_DATA": "false"
+      }
+    }
+  }
+}
