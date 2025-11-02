@@ -1,0 +1,24 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*.backup
+*.log
+*.exe
+
+# Editor e sistema
+.DS_Store
+.vscode/
+.idea/
+*.iml
+
+# Docker
+*.env

@@ -1,0 +1,78 @@
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const { Pool } = require("pg");
+
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
+
+/*const pool = new Pool({
+  user: "postgres",
+  host: "db",
+  database: "tasksdb",
+  password: "postgres",
+  port: 5432,
+});*/
+
+const pool = new Pool({
+  user: process.env.DB_USER,         // "postgres"
+  host: process.env.DB_HOST,         // "app-task-db.cmhcko6u60nk.us-east-1.rds.amazonaws.com"
+  database: process.env.DB_NAME,     // "tasksdb"
+  password: process.env.DB_PASSWORD, // "postgres"
+  port: parseInt(process.env.DB_PORT) // 5432
+});
+
+
+// Criar tabela se não existir e só depois iniciar o servidor
+(async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS tasks (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        completed BOOLEAN DEFAULT FALSE
+      )
+    `);
+    console.log("Tabela tasks pronta!");
+
+    // Inicia o servidor
+    app.listen(3000, () => {
+      console.log("Backend rodando na porta 3000");
+    });
+  } catch (err) {
+    console.error("Erro ao iniciar o backend:", err);
+    process.exit(1);
+  }
+})();
+
+// Rotas
+app.get("/tasks", async (req, res) => {
+  const { rows } = await pool.query("SELECT * FROM tasks ORDER BY id ASC");
+  res.json(rows);
+});
+
+app.post("/tasks", async (req, res) => {
+  const { title } = req.body;
+  const { rows } = await pool.query(
+    "INSERT INTO tasks (title) VALUES ($1) RETURNING *",
+    [title]
+  );
+  res.json(rows[0]);
+});
+
+app.put("/tasks/:id", async (req, res) => {
+  const { id } = req.params;
+  const { completed } = req.body;
+  const { rows } = await pool.query(
+    "UPDATE tasks SET completed = $1 WHERE id = $2 RETURNING *",
+    [completed, id]
+  );
+  res.json(rows[0]);
+});
+
+app.delete("/tasks/:id", async (req, res) => {
+  const { id } = req.params;
+  await pool.query("DELETE FROM tasks WHERE id = $1", [id]);
+  res.sendStatus(204);
+});
