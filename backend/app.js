@@ -1,4 +1,4 @@
-// Backend API for Task Management - Updated
+// Backend API for Task Management - v2.0 with /api routes
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
