@@ -43,33 +43,41 @@ const pool = new Pool({
   }
 })();
 
-// Rotas
-app.get("/tasks", async (req, res) => {
-  const { rows } = await pool.query("SELECT * FROM tasks ORDER BY id ASC");
-  res.json(rows);
+// Rotas - Suporte tanto /tasks quanto /api/tasks
+const taskRoutes = ["/tasks", "/api/tasks"];
+
+taskRoutes.forEach(route => {
+  app.get(route, async (req, res) => {
+    const { rows } = await pool.query("SELECT * FROM tasks ORDER BY id ASC");
+    res.json(rows);
+  });
+
+  app.post(route, async (req, res) => {
+    const { title } = req.body;
+    const { rows } = await pool.query(
+      "INSERT INTO tasks (title) VALUES ($1) RETURNING *",
+      [title]
+    );
+    res.json(rows[0]);
+  });
 });
 
-app.post("/tasks", async (req, res) => {
-  const { title } = req.body;
-  const { rows } = await pool.query(
-    "INSERT INTO tasks (title) VALUES ($1) RETURNING *",
-    [title]
-  );
-  res.json(rows[0]);
-});
+const taskIdRoutes = ["/tasks/:id", "/api/tasks/:id"];
 
-app.put("/tasks/:id", async (req, res) => {
-  const { id } = req.params;
-  const { completed } = req.body;
-  const { rows } = await pool.query(
-    "UPDATE tasks SET completed = $1 WHERE id = $2 RETURNING *",
-    [completed, id]
-  );
-  res.json(rows[0]);
-});
+taskIdRoutes.forEach(route => {
+  app.put(route, async (req, res) => {
+    const { id } = req.params;
+    const { completed } = req.body;
+    const { rows } = await pool.query(
+      "UPDATE tasks SET completed = $1 WHERE id = $2 RETURNING *",
+      [completed, id]
+    );
+    res.json(rows[0]);
+  });
 
-app.delete("/tasks/:id", async (req, res) => {
-  const { id } = req.params;
-  await pool.query("DELETE FROM tasks WHERE id = $1", [id]);
-  res.sendStatus(204);
+  app.delete(route, async (req, res) => {
+    const { id } = req.params;
+    await pool.query("DELETE FROM tasks WHERE id = $1", [id]);
+    res.sendStatus(204);
+  });
 });

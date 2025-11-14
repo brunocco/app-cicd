@@ -267,6 +267,7 @@ resource "aws_cloudfront_distribution" "frontend" {
   origin {
     domain_name = aws_lb.backend[each.key].dns_name
     origin_id   = "ALB-${each.key}"
+    origin_path = ""
     custom_origin_config {
       http_port              = 80
       https_port             = 443
@@ -539,6 +540,23 @@ resource "aws_lb_listener" "backend" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.backend[each.key].arn
+  }
+}
+
+resource "aws_lb_listener_rule" "api_rewrite" {
+  for_each     = toset(var.environments)
+  listener_arn = aws_lb_listener.backend[each.key].arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend[each.key].arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/*"]
+    }
   }
 }
 
