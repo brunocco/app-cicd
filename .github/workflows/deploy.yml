@@ -1,0 +1,219 @@
+name: Deploy App-CICD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+  ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+
+jobs:
+  # Job para detectar mudanças
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend-changed: ${{ steps.changes.outputs.frontend }}
+      backend-changed: ${{ steps.changes.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
+
+  # Deploy Frontend para Staging
+  deploy-frontend-staging:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend-changed == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update frontend for staging
+        run: |
+          # Atualizar app.js para apontar para o ALB de staging
+          sed -i 's|const API_BASE_URL = ".*"|const API_BASE_URL = "http://app-cicd-alb-staging-${{ secrets.AWS_ACCOUNT_ID }}.us-east-1.elb.amazonaws.com"|g' frontend/app.js
+
+      - name: Deploy to S3 Staging
+        run: |
+          aws s3 sync frontend/ s3://app-cicd-frontend-staging --delete
+
+      - name: Invalidate CloudFront Staging
+        run: |
+          aws cloudfront create-invalidation --distribution-id $(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[0]=='staging.buildcloud.com.br'].Id" --output text) --paths "/*"
+
+  # Deploy Backend para Staging
+  deploy-backend-staging:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend-changed == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: staging
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./backend
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Update ECS service
+        run: |
+          aws ecs update-service --cluster ${{ vars.ECS_CLUSTER }} --service ${{ vars.ECS_SERVICE_STG }} --force-new-deployment
+
+  # Testes E2E com Cypress
+  e2e-tests:
+    needs: [deploy-frontend-staging, deploy-backend-staging]
+    if: always() && (needs.deploy-frontend-staging.result == 'success' || needs.deploy-backend-staging.result == 'success' || (needs.deploy-frontend-staging.result == 'skipped' && needs.deploy-backend-staging.result == 'skipped'))
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Cypress
+        run: |
+          npm init -y
+          npm install cypress --save-dev
+
+      - name: Create Cypress config
+        run: |
+          cat > cypress.config.js << 'EOF'
+          const { defineConfig } = require('cypress')
+          
+          module.exports = defineConfig({
+            e2e: {
+              baseUrl: 'https://staging.buildcloud.com.br',
+              supportFile: false,
+              video: false,
+              screenshot: false
+            }
+          })
+          EOF
+
+      - name: Create E2E test
+        run: |
+          mkdir -p cypress/e2e
+          cat > cypress/e2e/app-test.cy.js << 'EOF'
+          describe('App CICD E2E Tests', () => {
+            it('should load the application', () => {
+              cy.visit('/')
+              cy.contains('Task Manager')
+            })
+          
+            it('should create a new task', () => {
+              cy.visit('/')
+              cy.get('#task-input').type('Test Task from Cypress')
+              cy.get('button[type="submit"]').click()
+              cy.contains('Test Task from Cypress')
+            })
+          
+            it('should mark task as completed', () => {
+              cy.visit('/')
+              cy.get('#task-input').type('Complete Task Test')
+              cy.get('button[type="submit"]').click()
+              cy.contains('Complete Task Test').parent().find('input[type="checkbox"]').check()
+              cy.contains('Complete Task Test').parent().should('have.class', 'completed')
+            })
+          
+            it('should delete a task', () => {
+              cy.visit('/')
+              cy.get('#task-input').type('Delete Task Test')
+              cy.get('button[type="submit"]').click()
+              cy.contains('Delete Task Test').parent().find('button').contains('Deletar').click()
+              cy.contains('Delete Task Test').should('not.exist')
+            })
+          })
+          EOF
+
+      - name: Wait for deployment
+        run: sleep 60
+
+      - name: Run Cypress tests
+        run: npx cypress run
+
+  # Deploy para Produção (com aprovação manual)
+  deploy-production:
+    needs: [e2e-tests]
+    if: needs.e2e-tests.result == 'success' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # Deploy Frontend para Produção
+      - name: Update frontend for production
+        run: |
+          # Atualizar app.js para apontar para o ALB de produção
+          sed -i 's|const API_BASE_URL = ".*"|const API_BASE_URL = "http://app-cicd-alb-prod-${{ secrets.AWS_ACCOUNT_ID }}.us-east-1.elb.amazonaws.com"|g' frontend/app.js
+
+      - name: Deploy Frontend to S3 Production
+        run: |
+          aws s3 sync frontend/ s3://app-cicd-frontend-prod --delete
+
+      - name: Invalidate CloudFront Production
+        run: |
+          aws cloudfront create-invalidation --distribution-id $(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[0]=='www.buildcloud.com.br'].Id" --output text) --paths "/*"
+
+      # Deploy Backend para Produção
+      - name: Build and push backend to production
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: prod
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./backend
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Update ECS service production
+        run: |
+          aws ecs update-service --cluster ${{ vars.ECS_CLUSTER }} --service ${{ vars.ECS_SERVICE_PROD }} --force-new-deployment

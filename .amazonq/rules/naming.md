@@ -1,13 +1,13 @@
-# Padrões de Nomenclatura - Projeto app-task
+# Padrões de Nomenclatura - Projeto app-cicd
 
 Essas regras garantem consistência e clareza entre os recursos da AWS e os módulos Terraform do projeto **app-task**.
 
 ---
 
 ## 🌐 Convenções gerais
-- **Prefixo do projeto:** `app-task`
+- **Prefixo do projeto:** `app-cicd`
 - **Separador:** hífen (`-`)
-- **Formato geral:** `app-task-<recurso>-<ambiente>` (ex: `app-task-vpc-prod`)
+- **Formato geral:** `app-cicd-<recurso>-<ambiente>` (ex: `app-cicd-vpc-prod`)
 - **Ambientes válidos:** `dev`, `staging`, `prod`
 - **Todas as letras em minúsculo**
 

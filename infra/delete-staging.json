@@ -1,0 +1,11 @@
+{
+  "Changes": [{
+    "Action": "DELETE",
+    "ResourceRecordSet": {
+      "Name": "staging.buildcloud.com.br",
+      "Type": "CNAME",
+      "TTL": 300,
+      "ResourceRecords": [{"Value": "dummy.buildcloud.com"}]
+    }
+  }]
+}

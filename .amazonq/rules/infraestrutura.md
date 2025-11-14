@@ -1,12 +1,15 @@
-# Regras de Infraestrutura - Projeto app-task
+# Regras de Infraestrutura - Projeto app-cicd
 
 ## Arquitetura
-- Plataforma: ECS com Fargate (2 serviços independentes).
-- Banco de dados: Amazon RDS PostgreSQL 17 (t3.micro, 20GB gp2).
-- Container Registry: Amazon ECR (2 repositórios).
-- Rede: VPC multi-AZ com subnets públicas e privadas.
-- Observabilidade: CloudWatch Logs (retenção 7 dias).
-- Capacidade: 1 task por serviço (256 CPU / 512 MB RAM).
+- **Frontend**: S3 + CloudFront + ACM (2 ambientes: staging/prod)
+- **Backend**: ECS com Fargate (2 ambientes independentes)
+- **Banco de dados**: Amazon RDS PostgreSQL 17 (t3.micro, 20GB gp2) - 2 instâncias
+- **Container Registry**: Amazon ECR (1 repositório backend)
+- **Rede**: VPC multi-AZ com subnets públicas e privadas (compartilhada)
+- **Observabilidade**: CloudWatch Logs (retenção 7 dias)
+- **Capacidade**: 1 task por serviço (256 CPU / 512 MB RAM)
+- **CI/CD**: GitHub Actions com testes automatizados
+- **Domínios**: staging.buildcloud.com.br e www.buildcloud.com.br
 
 ## Recursos obrigatórios
 

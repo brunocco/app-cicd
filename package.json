@@ -1,0 +1,25 @@
+{
+  "name": "app-cicd",
+  "version": "1.0.0",
+  "description": "App CICD - Full-Stack Multi-Environment Application",
+  "scripts": {
+    "test:e2e": "cypress run",
+    "test:e2e:open": "cypress open",
+    "deploy:staging": "./deploy.sh staging",
+    "deploy:prod": "./deploy.sh prod"
+  },
+  "keywords": [
+    "aws",
+    "cicd",
+    "terraform",
+    "github-actions",
+    "cypress",
+    "nodejs",
+    "postgresql"
+  ],
+  "author": "Bruno Cesar",
+  "license": "MIT",
+  "devDependencies": {
+    "cypress": "^13.6.0"
+  }
+}

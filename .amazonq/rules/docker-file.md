@@ -1,4 +1,4 @@
-# Regras para Dockerfile - Projeto app-task
+# Regras para Dockerfile - Projeto app-cicd
 
 ## Backend
 - Imagem base: `public.ecr.aws/docker/library/node:18-slim`.
@@ -9,9 +9,10 @@
 - Usar variáveis de ambiente para host e credenciais do banco.
 
 ## Frontend
-- Imagem base: `nginx:alpine`.
-- Copiar arquivos estáticos para `/usr/share/nginx/html`.
-- Expor porta 80.
+- **Hospedagem**: S3 + CloudFront (não usa mais Docker)
+- **Arquivos estáticos**: HTML, CSS, JS servidos pelo S3
+- **CDN**: CloudFront para cache e HTTPS
+- **Domínios**: staging.buildcloud.com.br e www.buildcloud.com.br
 
 ## Recomendações gerais
 - Evitar multi-stage builds.

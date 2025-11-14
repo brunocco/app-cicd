@@ -1,21 +1,35 @@
-# Regras de Pipeline - Projeto app-task
+# Regras de Pipeline - Projeto app-cicd
 
-## Ferramentas(implementacões futuras)
-- CodePipeline + CodeBuild + ECS Deploy.
-- Alternativamente, pode ser usado **GitHub Actions** para build e deploy.
+## Ferramentas
+- **GitHub Actions** para CI/CD completo
+- **Cypress** para testes E2E automatizados
+- **AWS CLI** para deploy de recursos
 
 ## Estágios
-1. **Source** → GitHub Repository.
-2. **Build** → CodeBuild (ou Actions) gera e envia imagem ao ECR.
-3. **Deploy** → ECS atualiza os serviços (frontend / backend).
+1. **Detect Changes** → Detecta mudanças em frontend/backend
+2. **Deploy Staging** → Deploy automático para staging
+3. **E2E Tests** → Testes automatizados com Cypress
+4. **Deploy Production** → Deploy manual com aprovação
 
-## Variáveis de ambiente
-- Configurar no pipeline:
-  - `ECR_REPO`
-  - `ECS_CLUSTER`
-  - `SERVICE_NAME`
-  - `AWS_REGION`
-  - `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME` (no backend)
+## Ambientes
+- **Staging**: staging.buildcloud.com.br (deploy automático)
+- **Production**: www.buildcloud.com.br (aprovação manual)
+
+## Variáveis GitHub Actions
+
+### Secrets (Repository Settings)
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_ACCOUNT_ID`
+
+### Variables (Repository Settings)
+- `AWS_REGION`: us-east-1
+- `ECR_REPOSITORY`: app-cicd-backend
+- `ECS_CLUSTER`: app-cicd-cluster
+- `ECS_SERVICE_STG`: app-cicd-backend-svc-staging
+- `ECS_SERVICE_PROD`: app-cicd-backend-svc-prod
+- `ECS_TASK_DEFINITION_STG`: app-cicd-backend-staging
+- `ECS_TASK_DEFINITION_PROD`: app-cicd-backend-prod
 
 ## Boas práticas
 - CloudWatch Logs habilitado.

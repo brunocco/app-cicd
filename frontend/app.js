@@ -2,7 +2,8 @@ const taskList = document.getElementById("task-list");
 const form = document.getElementById("task-form");
 const input = document.getElementById("task-input");
 
-const API_URL = "/tasks";
+const API_BASE_URL = "http://app-cicd-alb-staging-ACCOUNT_ID.us-east-1.elb.amazonaws.com";
+const API_URL = `${API_BASE_URL}/tasks`;
 
 function loadTasks() {
   fetch(API_URL)

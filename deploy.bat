@@ -1,29 +1,40 @@
 @echo off
+REM Script para deploy manual (desenvolvimento)
+REM Para produção, use GitHub Actions
+
 set AWS_REGION=us-east-1
-set AWS_ACCOUNT_ID=<SEU_ID_AWS_12DIGITOS>
-set ECR_BACKEND=app-task-backend
-set ECR_FRONTEND=app-task-frontend
+for /f "tokens=*" %%i in ('aws sts get-caller-identity --query Account --output text') do set AWS_ACCOUNT_ID=%%i
+set ECR_BACKEND=app-cicd-backend
+set ENVIRONMENT=%1
+if "%ENVIRONMENT%"=="" set ENVIRONMENT=staging
+
+echo === Deploy para ambiente: %ENVIRONMENT% ===
 
 echo === Login no ECR ===
 aws ecr get-login-password --region %AWS_REGION% | docker login --username AWS --password-stdin %AWS_ACCOUNT_ID%.dkr.ecr.%AWS_REGION%.amazonaws.com
 
 echo === Build Backend ===
-docker build -t %ECR_BACKEND%:latest ./backend
+docker build -t %ECR_BACKEND%:%ENVIRONMENT% ./backend
 
 echo === Tag Backend ===
-docker tag %ECR_BACKEND%:latest %AWS_ACCOUNT_ID%.dkr.ecr.%AWS_REGION%.amazonaws.com/%ECR_BACKEND%:latest
+docker tag %ECR_BACKEND%:%ENVIRONMENT% %AWS_ACCOUNT_ID%.dkr.ecr.%AWS_REGION%.amazonaws.com/%ECR_BACKEND%:%ENVIRONMENT%
 
 echo === Push Backend ===
-docker push %AWS_ACCOUNT_ID%.dkr.ecr.%AWS_REGION%.amazonaws.com/%ECR_BACKEND%:latest
+docker push %AWS_ACCOUNT_ID%.dkr.ecr.%AWS_REGION%.amazonaws.com/%ECR_BACKEND%:%ENVIRONMENT%
 
-echo === Build Frontend ===
-docker build -t %ECR_FRONTEND%:latest ./frontend
+echo === Deploy Frontend para S3 ===
+REM Sync para S3
+aws s3 sync frontend/ s3://app-cicd-frontend-%ENVIRONMENT% --delete
 
-echo === Tag Frontend ===
-docker tag %ECR_FRONTEND%:latest %AWS_ACCOUNT_ID%.dkr.ecr.%AWS_REGION%.amazonaws.com/%ECR_FRONTEND%:latest
+echo === Forçar deploy ECS ===
+aws ecs update-service --cluster app-cicd-cluster --service app-cicd-backend-svc-%ENVIRONMENT% --force-new-deployment
 
-echo === Push Frontend ===
-docker push %AWS_ACCOUNT_ID%.dkr.ecr.%AWS_REGION%.amazonaws.com/%ECR_FRONTEND%:latest
-
-echo === Deploy completo! ===
+echo === Deploy completo para %ENVIRONMENT%! ===
+if "%ENVIRONMENT%"=="staging" (
+    echo Frontend: https://staging.buildcloud.com.br
+    echo Backend: http://app-cicd-alb-staging-%AWS_ACCOUNT_ID%.us-east-1.elb.amazonaws.com
+) else (
+    echo Frontend: https://www.buildcloud.com.br
+    echo Backend: http://app-cicd-alb-prod-%AWS_ACCOUNT_ID%.us-east-1.elb.amazonaws.com
+)
 pause
