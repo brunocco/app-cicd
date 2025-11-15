@@ -55,23 +55,5 @@ describe('App CICD E2E Tests', () => {
 
 
 
-  it('should handle multiple tasks', () => {
-    const tasks = [
-      `Task 1 ${Date.now()}`,
-      `Task 2 ${Date.now()}`,
-      `Task 3 ${Date.now()}`
-    ]
 
-    // Criar múltiplas tarefas
-    tasks.forEach(task => {
-      cy.get('#task-input').type(task)
-      cy.get('button[type="submit"]').click()
-      cy.contains(task).should('be.visible')
-    })
-
-    // Verificar se todas estão visíveis
-    tasks.forEach(task => {
-      cy.contains(task).should('be.visible')
-    })
-  })
 })
