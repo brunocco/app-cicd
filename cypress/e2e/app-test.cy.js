@@ -54,17 +54,41 @@ describe('App CICD E2E Tests', () => {
   })
 
   it('should mark task as completed', () => {
-    // Teste simplificado - apenas verifica se elementos existem
-    cy.get('#task-input', { timeout: 15000 }).should('be.visible')
-    cy.get('button[type="submit"]', { timeout: 10000 }).should('be.visible')
-    cy.log('Task completion test - elements found')
+    const taskTitle = 'Complete Task Test'
+    
+    // Criar tarefa
+    cy.get('#task-input', { timeout: 15000 }).clear().type(taskTitle)
+    cy.get('button[type="submit"]', { timeout: 10000 }).click()
+    cy.wait(5000)
+    
+    // Verificar se tarefa foi criada
+    cy.contains(taskTitle, { timeout: 20000 }).should('be.visible')
+    
+    // Marcar como concluída
+    cy.contains(taskTitle).parent().find('input[type="checkbox"]', { timeout: 10000 }).check()
+    cy.wait(3000)
+    
+    // Verificar se foi marcada como concluída (text-decoration)
+    cy.contains(taskTitle).should('have.css', 'text-decoration-line', 'line-through')
   })
 
   it('should delete a task', () => {
-    // Teste simplificado - apenas verifica se a página carregou
-    cy.get('#task-input', { timeout: 15000 }).should('be.visible')
-    cy.contains('Task Manager', { timeout: 10000 }).should('be.visible')
-    cy.log('Delete task test - page loaded successfully')
+    const taskTitle = 'Delete Task Test'
+    
+    // Criar tarefa
+    cy.get('#task-input', { timeout: 15000 }).clear().type(taskTitle)
+    cy.get('button[type="submit"]', { timeout: 10000 }).click()
+    cy.wait(5000)
+    
+    // Verificar se tarefa foi criada
+    cy.contains(taskTitle, { timeout: 20000 }).should('be.visible')
+    
+    // Deletar tarefa
+    cy.contains(taskTitle).parent().find('button', { timeout: 10000 }).contains('Deletar').click()
+    cy.wait(5000)
+    
+    // Verificar se foi deletada
+    cy.contains(taskTitle).should('not.exist')
   })
 
   it('should handle multiple tasks', () => {
