@@ -1,6 +1,6 @@
 # Padrões de Nomenclatura - Projeto app-cicd
 
-Essas regras garantem consistência e clareza entre os recursos da AWS e os módulos Terraform do projeto **app-task**.
+Essas regras garantem consistência e clareza entre os recursos da AWS e os módulos Terraform do projeto **app-cicd**.
 
 ---
 
@@ -16,64 +16,64 @@ Essas regras garantem consistência e clareza entre os recursos da AWS e os mód
 ## 🧱 Infraestrutura base (Terraform)
 | Recurso | Padrão | Exemplo |
 |----------|---------|---------|
-| VPC | `app-task-vpc-<env>` | `app-task-vpc-dev` |
-| Subnet pública | `app-task-public-subnet-<az>` | `app-task-public-subnet-a` |
-| Subnet privada | `app-task-private-subnet-<az>` | `app-task-private-subnet-b` |
-| Internet Gateway | `app-task-igw` | `app-task-igw` |
-| NAT Gateway | `app-task-natgw-<az>` | `app-task-natgw-a` |
-| Route Table | `app-task-rt-<tipo>` | `app-task-rt-private` |
+| VPC | `app-cicd-vpc-<env>` | `app-cicd-vpc-dev` |
+| Subnet pública | `app-cicd-public-subnet-<az>` | `app-cicd-public-subnet-a` |
+| Subnet privada | `app-cicd-private-subnet-<az>` | `app-cicd-private-subnet-b` |
+| Internet Gateway | `app-cicd-igw` | `app-cicd-igw` |
+| NAT Gateway | `app-cicd-natgw-<az>` | `app-cicd-natgw-a` |
+| Route Table | `app-cicd-rt-<tipo>` | `app-cicd-rt-private` |
 
 ---
 
 ## ⚙️ ECS / ECR
 | Recurso | Padrão | Exemplo |
 |----------|---------|---------|
-| Cluster ECS | `app-task-cluster-<env>` | `app-task-cluster-dev` |
-| Task Definition | `app-task-<service>-task` | `app-task-backend-task` |
-| Service ECS | `app-task-<service>-svc` | `app-task-frontend-svc` |
-| Container | `app-task-<service>-container` | `app-task-backend-container` |
-| ECR Repository | `app-task-<service>-repo` | `app-task-backend-repo` |
+| Cluster ECS | `app-cicd-cluster-<env>` | `app-cicd-cluster-dev` |
+| Task Definition | `app-cicd-<service>-task` | `app-cicd-backend-task` |
+| Service ECS | `app-cicd-<service>-svc` | `app-cicd-frontend-svc` |
+| Container | `app-cicd-<service>-container` | `app-cicd-backend-container` |
+| ECR Repository | `app-cicd-<service>-repo` | `app-cicd-backend-repo` |
 
 ---
 
 ## 🧩 Banco de Dados (RDS)
 | Recurso | Padrão | Exemplo |
 |----------|---------|---------|
-| Instância | `app-task-db-<env>` | `app-task-db-dev` |
-| Security Group | `app-task-db-sg` | `app-task-db-sg` |
-| Subnet Group | `app-task-db-subnet-group` | `app-task-db-subnet-group` |
+| Instância | `app-cicd-db-<env>` | `app-cicd-db-dev` |
+| Security Group | `app-cicd-db-sg` | `app-cicd-db-sg` |
+| Subnet Group | `app-cicd-db-subnet-group` | `app-cicd-db-subnet-group` |
 
 ---
 
 ## 🌍 Networking e Segurança
 | Recurso | Padrão | Exemplo |
 |----------|---------|---------|
-| Security Group do ALB | `app-task-alb-sg` | `app-task-alb-sg` |
-| Security Group do ECS | `app-task-ecs-sg` | `app-task-ecs-sg` |
-| Security Group do RDS | `app-task-rds-sg` | `app-task-rds-sg` |
-| Target Group | `app-task-<service>-tg` | `app-task-backend-tg` |
-| Listener | `app-task-listener-<port>` | `app-task-listener-80` |
-| Load Balancer | `app-task-alb` | `app-task-alb` |
+| Security Group do ALB | `app-cicd-alb-sg` | `app-cicd-alb-sg` |
+| Security Group do ECS | `app-cicd-ecs-sg` | `app-cicd-ecs-sg` |
+| Security Group do RDS | `app-cicd-rds-sg` | `app-cicd-rds-sg` |
+| Target Group | `app-cicd-<service>-tg` | `app-cicd-backend-tg` |
+| Listener | `app-cicd-listener-<port>` | `app-cicd-listener-80` |
+| Load Balancer | `app-cicd-alb` | `app-cicd-alb` |
 
 ---
 
 ## 🧰 Monitoramento e Logs
 | Recurso | Padrão | Exemplo |
 |----------|---------|---------|
-| Log Group ECS | `/ecs/app-task/<service>` | `/ecs/app-task/backend` |
-| Log Stream | `app-task-<service>-stream` | `app-task-frontend-stream` |
-| Metric Filter | `app-task-<service>-filter` | `app-task-backend-filter` |
-| Dashboard | `app-task-dashboard-<env>` | `app-task-dashboard-dev` |
+| Log Group ECS | `/ecs/app-cicd/<service>` | `/ecs/app-cicd/backend` |
+| Log Stream | `app-cicd-<service>-stream` | `app-cicd-frontend-stream` |
+| Metric Filter | `app-cicd-<service>-filter` | `app-cicd-backend-filter` |
+| Dashboard | `app-cicd-dashboard-<env>` | `app-cicd-dashboard-dev` |
 
 ---
 
 ## 🧪 Pipelines e Automação
 | Recurso | Padrão | Exemplo |
 |----------|---------|---------|
-| CodePipeline | `app-task-pipeline-<service>` | `app-task-pipeline-backend` |
-| CodeBuild Project | `app-task-build-<service>` | `app-task-build-frontend` |
-| IAM Role Pipeline | `app-task-role-pipeline` | `app-task-role-pipeline` |
-| IAM Role ECS | `app-task-role-ecs` | `app-task-role-ecs` |
+| CodePipeline | `app-cicd-pipeline-<service>` | `app-cicd-pipeline-backend` |
+| CodeBuild Project | `app-cicd-build-<service>` | `app-cicd-build-frontend` |
+| IAM Role Pipeline | `app-cicd-role-pipeline` | `app-cicd-role-pipeline` |
+| IAM Role ECS | `app-cicd-role-ecs` | `app-cicd-role-ecs` |
 
 ---
 
@@ -82,7 +82,7 @@ Essas regras garantem consistência e clareza entre os recursos da AWS e os mód
 - Tag padrão para todos os recursos:
   ```hcl
   tags = {
-    Project     = "app-task"
+    Project     = "app-cicd"
     Environment = var.environment
     ManagedBy   = "Terraform"
     Owner       = "brunocco"

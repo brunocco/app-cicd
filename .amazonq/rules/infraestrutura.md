@@ -74,23 +74,26 @@ Infraestrutura gerenciada via **Terraform** em arquivo único `infra/main.tf`:
 2. **VPC e Subnets** (4 subnets em 2 AZs)
 3. **Gateways** (IGW + 2 NAT)
 4. **Route Tables** (1 pública + 2 privadas)
-5. **ECS Cluster**
-6. **Security Groups** (4 grupos)
-7. **ALB + Target Groups + Listener + Rule**
-8. **RDS + DB Subnet Group**
-9. **IAM Role + Policy Attachment**
-10. **CloudWatch Log Groups**
-11. **Task Definitions** (backend e frontend)
-12. **ECS Services** (backend e frontend)
-13. **Outputs** (ALB DNS, RDS endpoint)
+5. **S3 Buckets** (frontend staging e prod)
+6. **CloudFront** (CDN com certificados ACM)
+7. **ECS Cluster**
+8. **Security Groups** (4 grupos)
+9. **ALB + Target Groups + Listener + Rule**
+10. **RDS + DB Subnet Group**
+11. **IAM Role + Policy Attachment**
+12. **CloudWatch Log Groups**
+13. **Task Definitions** (backend)
+14. **ECS Services** (backend)
+15. **Route53 Records** (DNS)
+16. **Outputs** (ALB DNS, RDS endpoint, CloudFront)
 
 ## Padrão de nomes
 
 Seguir rigorosamente o arquivo `naming.md`:
-- Prefixo: `app-task`
+- Prefixo: `app-cicd`
 - Separador: hífen (`-`)
-- Formato: `app-task-<recurso>-<especificador>`
-- Exemplos: `app-task-backend-svc`, `app-task-frontend-tg`, `app-task-alb`
+- Formato: `app-cicd-<recurso>-<especificador>`
+- Exemplos: `app-cicd-backend-svc`, `app-cicd-frontend-staging`, `app-cicd-alb`
 
 ## Boas práticas implementadas
 

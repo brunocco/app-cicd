@@ -1,20 +1,18 @@
-# 🚀 App-CICD - Aplicação Full-Stack Multi-Ambiente na AWS
+# 🚀 App-CICD - Pipeline Completo Multi-Ambiente na AWS
 
 ## 📋 Introdução
 
-**App-CICD** é uma aplicação completa de gerenciamento de tarefas (To-Do List) desenvolvida com arquitetura moderna de microsserviços, demonstrando implementação de CI/CD com múltiplos ambientes na AWS.
-
-O projeto implementa uma infraestrutura cloud escalável, segura e de alta disponibilidade com pipeline automatizado de deploy, testes E2E e aprovação manual para produção.
+**App-CICD** é uma aplicação completa de gerenciamento de tarefas (To-Do List) desenvolvida com foco em demonstrar um **pipeline CI/CD completo** com múltiplos ambientes na AWS. O projeto implementa infraestrutura cloud escalável, segura e de alta disponibilidade com pipeline automatizado, testes E2E e aprovação manual para produção.
 
 ### 🎯 Objetivos do Projeto
 
-- Demonstrar CI/CD completo com GitHub Actions
-- Implementar múltiplos ambientes (staging/production)
-- Utilizar S3 + CloudFront para frontend estático
-- Aplicar testes automatizados E2E com Cypress
-- Implementar aprovação manual para produção
-- Usar certificados SSL/TLS com ACM
-- Demonstrar infraestrutura como código com Terraform
+- **Demonstrar CI/CD completo** com GitHub Actions
+- **Pipeline automatizado** que detecta mudanças em frontend/backend
+- **Múltiplos ambientes** (staging/production) com aprovação manual
+- **Infraestrutura como código** com Terraform
+- **Testes automatizados E2E** com Cypress
+- **Arquitetura serverless** com ECS Fargate
+- **CDN global** com CloudFront + certificados SSL/TLS
 
 ---
 
@@ -57,22 +55,35 @@ O projeto implementa uma infraestrutura cloud escalável, segura e de alta dispo
 app-cicd/
 ├── .github/workflows/           # GitHub Actions CI/CD
 │   └── deploy.yml              # Pipeline principal
-├── .amazonq/                   # Configurações Amazon Q
-│   └── rules/                  # Regras de infraestrutura
+├── .amazonq/                   # Configurações Amazon Q (IA)
+│   ├── rules/                  # Regras de infraestrutura
+│   │   ├── docker-file.md      # Padrões Docker
+│   │   ├── infraestrutura.md   # Arquitetura AWS
+│   │   ├── naming.md           # Convenções de nomes
+│   │   └── pipeline.md         # Regras de CI/CD
+│   └── README.md               # Documentação Amazon Q
 ├── backend/                    # API REST Node.js
+│   ├── migrations/             # Scripts SQL
 │   ├── app.js                 # Servidor Express
 │   ├── Dockerfile             # Container backend
-│   └── package.json
+│   └── package.json           # Dependências Node.js
 ├── frontend/                   # Interface web estática
 │   ├── index.html             # Interface HTML
-│   └── app.js                 # Lógica JavaScript
+│   ├── app.js                 # Lógica JavaScript
+│   └── Dockerfile             # Container frontend (opcional)
 ├── infra/                     # Infraestrutura Terraform
-│   └── main.tf                # Configuração completa
+│   └── main.tf                # Configuração completa AWS
 ├── cypress/                   # Testes E2E
 │   └── e2e/
 │       └── app-test.cy.js     # Testes automatizados
 ├── cypress.config.js          # Configuração Cypress
-└── README.md                  # Documentação
+├── deploy.bat                 # Deploy manual Windows (opcional)
+├── deploy.sh                  # Deploy manual Linux (opcional)
+├── CERTIFICADOS-EXISTENTES.md # Documentação certificados (opcional)
+├── GITHUB-SETUP.md            # Setup GitHub Actions (opcional)
+├── ROUTE53-SETUP.md           # Configuração DNS (opcional)
+├── RESUMO-CONFIGURACAO.md     # Resumo técnico (opcional)
+└── README.md                  # Esta documentação
 ```
 
 ---
@@ -82,7 +93,7 @@ app-cicd/
 ### Frontend (Estático)
 - **Amazon S3**: Hospedagem de arquivos estáticos (2 buckets)
 - **CloudFront**: CDN global com cache e HTTPS
-- **ACM**: Certificados SSL/TLS gratuitos
+- **ACM**: Certificados SSL/TLS wildcard existentes
 - **Route53**: DNS para domínios personalizados
 
 ### Backend (Containerizado)
@@ -98,7 +109,7 @@ app-cicd/
 - **VPC**: Rede virtual isolada compartilhada
 - **Subnets**: Públicas e privadas em múltiplas AZs
 - **Security Groups**: Controle granular de tráfego
-- **NAT Gateways**: Conectividade de saída segura
+- **NAT Gateways**: Conectividade de saída segura (2 AZs)
 
 ### Observabilidade
 - **CloudWatch Logs**: Logs centralizados por ambiente
@@ -108,80 +119,149 @@ app-cicd/
 
 ## 🔄 Pipeline CI/CD
 
+### Trigger do Pipeline
+O pipeline é **automaticamente disparado** quando há push de mudanças em:
+- **Frontend**: Arquivos em `frontend/`
+- **Backend**: Arquivos em `backend/`
+- **Ambos**: Se houver mudanças em ambos os diretórios
+
 ### Fluxo Automatizado
 
-1. **Detecção de Mudanças**
+1. **Detecção de Mudanças** 🔍
    - Monitora alterações em `frontend/` e `backend/`
-   - Executa jobs apenas se houver mudanças
+   - Executa jobs apenas se houver mudanças relevantes
 
-2. **Deploy Staging (Automático)**
-   - Frontend: Sync para S3 + invalidação CloudFront
-   - Backend: Build Docker + push ECR + deploy ECS
+2. **Deploy Staging (Automático)** 🚀
+   - **Frontend**: Sync para S3 + invalidação CloudFront
+   - **Backend**: Build Docker + push ECR + deploy ECS
 
-3. **Testes E2E (Cypress)**
+3. **Testes E2E (Cypress)** 🧪
    - Testa funcionalidades críticas no staging
-   - Valida criação, edição e exclusão de tarefas
+   - Valida carregamento da aplicação e criação de tarefas
 
-4. **Deploy Produção (Manual)**
-   - Requer aprovação manual no GitHub
-   - Deploy idêntico ao staging
+4. **Deploy Produção (Manual)** ✋
+   - Requer aprovação manual no GitHub Actions
+   - Deploy idêntico ao staging após aprovação
 
 ### Ambientes
 
-| Ambiente | URL | Deploy | Banco |
-|----------|-----|--------|-------|
-| **Staging** | https://staging.buildcloud.com.br | Automático | RDS Staging |
-| **Production** | https://www.buildcloud.com.br | Manual | RDS Production |
+| Ambiente | URL | Deploy | Banco | Status |
+|----------|-----|--------|-------|--------|
+| **Staging** | https://staging.buildcloud.com.br | Automático | RDS Staging | ✅ Ativo |
+| **Production** | https://www.buildcloud.com.br | Manual | RDS Production | ✅ Ativo |
 
 ---
 
-## 🛠️ Configuração e Deploy
+## 🛠️ Como Replicar o Projeto
 
 ### 1️⃣ Pré-requisitos
 
-- Conta AWS com permissões administrativas
-- Domínio registrado (buildcloud.com.br)
-- GitHub repository
-- AWS CLI configurado
-- Terraform instalado
+#### Obrigatórios
+- ✅ **Conta AWS** com permissões administrativas
+- ✅ **Domínio registrado** (ex: seudominio.com)
+- ✅ **Certificados ACM** criados para:
+  - `staging.seudominio.com`
+  - `www.seudominio.com` ou `seudominio.com`
+- ✅ **Route53 Hosted Zone** configurada
+- ✅ **GitHub Account** com repositório
+- ✅ **AWS CLI** configurado localmente
+- ✅ **Terraform** instalado (v1.0+)
 
-### 2️⃣ Configurar Domínios no Route53
+#### Opcionais
+- 🔧 **Docker** para testes locais
+- 🔧 **Node.js** para desenvolvimento local
+
+### 2️⃣ Clone e Configuração Inicial
 
 ```bash
-# Criar hosted zone (se não existir)
-aws route53 create-hosted-zone --name buildcloud.com.br --caller-reference $(date +%s)
+# Clone o repositório
+git clone https://github.com/brunocco/app-cicd.git
+cd app-cicd
 
-# Anotar os name servers para configurar no registrador do domínio
-aws route53 get-hosted-zone --id /hostedzone/YOUR_ZONE_ID
+# Configure suas credenciais AWS
+aws configure
 ```
 
-### 3️⃣ Provisionar Infraestrutura
+### 3️⃣ Configurar Domínios e Certificados
+
+#### Certificados ACM (Pré-requisito)
+Você deve ter certificados ACM já criados:
+
+```bash
+# Listar certificados existentes
+aws acm list-certificates --region us-east-1
+
+# Anotar os ARNs dos certificados wildcard
+# Exemplo: arn:aws:acm:us-east-1:123456789012:certificate/abc123...
+```
+
+#### Route53 Hosted Zone
+```bash
+# Verificar hosted zone existente
+aws route53 list-hosted-zones
+
+# Se não existir, criar
+aws route53 create-hosted-zone --name seudominio.com --caller-reference $(date +%s)
+```
+
+### 4️⃣ Personalizar Terraform
+
+Edite o arquivo `infra/main.tf`:
+
+```hcl
+# Atualizar domínios
+variable "domain_names" {
+  description = "Domain names for each environment"
+  type        = map(string)
+  default = {
+    staging = "staging.seudominio.com"    # ← Alterar
+    prod    = "www.seudominio.com"        # ← Alterar
+  }
+}
+
+# Atualizar ARN do certificado
+locals {
+  cert_arn = "arn:aws:acm:us-east-1:SEU_ACCOUNT:certificate/SEU_CERT_ID"  # ← Alterar
+}
+
+# Atualizar zona do Route53
+data "aws_route53_zone" "main" {
+  name         = "seudominio.com"         # ← Alterar
+  private_zone = false
+}
+```
+
+### 5️⃣ Provisionar Infraestrutura
 
 ```bash
 cd infra
 
-# Atualizar Account ID no Terraform
-ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-sed -i "s/ACCOUNT_ID/$ACCOUNT_ID/g" main.tf
-
-# Aplicar infraestrutura
+# Inicializar Terraform
 terraform init
+
+# Planejar mudanças
 terraform plan
+
+# Aplicar infraestrutura (15-20 minutos)
 terraform apply -auto-approve
 ```
 
-**Tempo estimado**: 15-20 minutos (certificados ACM podem demorar)
+**⏱️ Tempo estimado**: 15-20 minutos
 
-### 4️⃣ Configurar GitHub Actions
+### 6️⃣ Configurar GitHub Actions
 
-#### Secrets (Repository → Settings → Secrets)
+#### Fork do Repositório
+1. Faça **fork** do repositório para sua conta
+2. Clone seu fork localmente
+
+#### Secrets (Repository → Settings → Secrets and Variables → Actions)
 ```
 AWS_ACCESS_KEY_ID=AKIA...
 AWS_SECRET_ACCESS_KEY=...
 AWS_ACCOUNT_ID=123456789012
 ```
 
-#### Variables (Repository → Settings → Variables)
+#### Variables (Repository → Settings → Secrets and Variables → Actions)
 ```
 AWS_REGION=us-east-1
 ECR_REPOSITORY=app-cicd-backend
@@ -192,68 +272,179 @@ ECS_TASK_DEFINITION_STG=app-cicd-backend-staging
 ECS_TASK_DEFINITION_PROD=app-cicd-backend-prod
 ```
 
-### 5️⃣ Configurar Environments no GitHub
+#### Environments (Repository → Settings → Environments)
+1. **Criar environment `staging`** (sem proteção)
+2. **Criar environment `production`** com:
+   - ✅ **Required reviewers**: Adicionar você mesmo
+   - ✅ **Wait timer**: 0 minutes
 
-1. **Repository → Settings → Environments**
-2. Criar environment `staging` (sem proteção)
-3. Criar environment `production` com:
-   - ✅ Required reviewers (você)
-   - ✅ Wait timer: 0 minutes
-
-### 6️⃣ Primeiro Deploy
+### 7️⃣ Primeiro Deploy
 
 ```bash
-# Fazer push para main branch
+# Fazer uma pequena mudança para disparar o pipeline
+echo "# Deploy inicial" >> README.md
+
+# Commit e push
 git add .
-git commit -m "Initial deployment"
+git commit -m "Initial deployment - trigger pipeline"
 git push origin main
 ```
 
-O pipeline será executado automaticamente.
+### 8️⃣ Acompanhar Pipeline
+
+1. **Acesse**: https://github.com/SEU_USUARIO/app-cicd/actions
+2. **Veja o pipeline executando**:
+   - ✅ Detect Changes
+   - ✅ Deploy Frontend Staging
+   - ✅ Deploy Backend Staging  
+   - ✅ E2E Tests
+   - ⏳ Deploy Production (aguardando aprovação)
+
+### 9️⃣ Aprovar Deploy Produção
+
+1. **Clique no workflow** em execução
+2. **Clique em "Review deployments"**
+3. **Selecione "production"**
+4. **Clique "Approve and deploy"**
 
 ---
 
 ## 🧪 Testes E2E
 
-Os testes Cypress validam:
+Os testes Cypress validam automaticamente:
 
-- ✅ Carregamento da aplicação
-- ✅ Criação de nova tarefa
-- ✅ Marcação como concluída
-- ✅ Exclusão de tarefa
-- ✅ Múltiplas tarefas
+- ✅ **Carregamento da aplicação**
+- ✅ **Criação de nova tarefa**
 
-### Executar Localmente
+### Executar Testes Localmente
 
 ```bash
+# Instalar Cypress
 npm install cypress --save-dev
+
+# Executar testes
+npx cypress run
+
+# Interface gráfica
 npx cypress open
 ```
 
 ---
 
-## 📊 Monitoramento
+## 📊 Monitoramento e Troubleshooting
 
 ### CloudWatch Logs
-- `/ecs/app-cicd/backend/staging`
-- `/ecs/app-cicd/backend/prod`
-
-### Health Checks
-- **Backend**: `GET /tasks` (porta 3000)
-- **Frontend**: Servido pelo CloudFront
-
-### Comandos Úteis
-
 ```bash
-# Ver logs do backend staging
+# Logs do backend staging
 aws logs tail /ecs/app-cicd/backend/staging --follow
 
+# Logs do backend produção
+aws logs tail /ecs/app-cicd/backend/prod --follow
+```
+
+### Status dos Serviços
+```bash
 # Status dos serviços ECS
-aws ecs describe-services --cluster app-cicd-cluster --services app-cicd-backend-svc-staging app-cicd-backend-svc-prod
+aws ecs describe-services --cluster app-cicd-cluster \
+  --services app-cicd-backend-svc-staging app-cicd-backend-svc-prod
 
 # Health check dos target groups
-aws elbv2 describe-target-health --target-group-arn $(aws elbv2 describe-target-groups --names app-cicd-backend-tg-staging --query 'TargetGroups[0].TargetGroupArn' --output text)
+aws elbv2 describe-target-health \
+  --target-group-arn $(aws elbv2 describe-target-groups \
+  --names app-cicd-backend-tg-staging \
+  --query 'TargetGroups[0].TargetGroupArn' --output text)
 ```
+
+### Problemas Comuns
+
+#### Pipeline Falha no Deploy
+```bash
+# Verificar logs da task ECS
+aws ecs describe-tasks --cluster app-cicd-cluster \
+  --tasks $(aws ecs list-tasks --cluster app-cicd-cluster \
+  --service-name app-cicd-backend-svc-staging \
+  --query 'taskArns[0]' --output text)
+```
+
+#### Frontend não Carrega
+```bash
+# Invalidar cache do CloudFront
+DISTRIBUTION_ID=$(aws cloudfront list-distributions \
+  --query "DistributionList.Items[?Aliases.Items[0]=='staging.seudominio.com'].Id" \
+  --output text)
+
+aws cloudfront create-invalidation \
+  --distribution-id $DISTRIBUTION_ID --paths "/*"
+```
+
+#### Testes Cypress Falhando
+- Aguardar 2-3 minutos após deploy para estabilização
+- Verificar se o staging está acessível no browser
+- Verificar logs do CloudWatch
+
+---
+
+## 🔄 Rollback
+
+### Rollback Automático
+- **ECS**: Rollback automático se health check falhar
+- **CloudFront**: Cache pode ser invalidado manualmente
+
+### Rollback Manual
+
+#### Backend (ECS)
+```bash
+# Listar task definitions
+aws ecs list-task-definitions --family-prefix app-cicd-backend-staging
+
+# Fazer rollback para versão anterior
+aws ecs update-service --cluster app-cicd-cluster \
+  --service app-cicd-backend-svc-staging \
+  --task-definition app-cicd-backend-staging:REVISION_ANTERIOR
+```
+
+#### Frontend (S3)
+```bash
+# Fazer rollback do frontend (exemplo)
+aws s3 sync s3://backup-bucket/frontend/ s3://app-cicd-frontend-staging/
+aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+```
+
+---
+
+## 📸 Screenshots do Pipeline
+
+### 1. ECS Services e Tasks Backend Staging Rodando
+![ECS Staging](docs/images/ecs-staging-running.png)
+*Serviços ECS do backend staging em execução com tasks saudáveis*
+
+### 2. Aplicação Staging Funcionando
+![App Staging](docs/images/app-staging-working.png)
+*Interface da aplicação funcionando em https://staging.buildcloud.com.br*
+
+### 3. Resource Map ALB Staging
+![ALB Staging](docs/images/alb-staging-resource-map.png)
+*Load Balancer staging com domínio configurado e targets saudáveis*
+
+### 4. Pipeline Completa Esperando Aprovação
+![Pipeline Waiting](docs/images/pipeline-waiting-approval.png)
+*Pipeline executada com sucesso aguardando aprovação manual para produção*
+
+### 5. Pipeline Completa Terminada
+![Pipeline Complete](docs/images/pipeline-complete.png)
+*Pipeline totalmente executada após aprovação com todos os checkmarks verdes*
+
+### 6. ECS Services e Tasks Backend Prod Rodando
+![ECS Prod](docs/images/ecs-prod-running.png)
+*Serviços ECS do backend produção em execução*
+
+### 7. Aplicação Prod Rodando
+![App Prod](docs/images/app-prod-working.png)
+*Aplicação funcionando em produção em https://www.buildcloud.com.br*
+
+### 8. Resource Map ALB Prod
+![ALB Prod](docs/images/alb-prod-resource-map.png)
+*Load Balancer produção com domínio configurado*
 
 ---
 
@@ -269,79 +460,88 @@ aws elbv2 describe-target-health --target-group-arn $(aws elbv2 describe-target-
 | **S3** | $1 | $1 | $2 |
 | **Route53** | - | $0.50 | $0.50 |
 | **ACM** | Gratuito | Gratuito | $0 |
-| **Total** | - | - | **~$168** |
+| **ECR** | $1 | $1 | $2 |
+| **Total** | - | - | **~$170** |
 
-> **Otimização**: Para desenvolvimento, considere usar 1 NAT Gateway (-$32/mês)
-
----
-
-## 🔧 Troubleshooting
-
-### Pipeline Falha no Deploy
-```bash
-# Verificar status do ECS service
-aws ecs describe-services --cluster app-cicd-cluster --service app-cicd-backend-svc-staging
-
-# Verificar logs da task
-aws logs tail /ecs/app-cicd/backend/staging --follow
-```
-
-### Certificado ACM Pendente
-- Verificar se os registros DNS foram criados no Route53
-- Aguardar até 30 minutos para validação
-
-### Testes Cypress Falhando
-- Verificar se o staging está acessível
-- Aguardar 2-3 minutos após deploy para estabilização
-
-### Frontend não Carrega
-```bash
-# Verificar invalidação do CloudFront
-aws cloudfront list-invalidations --distribution-id YOUR_DISTRIBUTION_ID
-
-# Forçar nova invalidação
-aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --paths "/*"
-```
+> **💡 Otimização**: Para desenvolvimento, considere usar 1 NAT Gateway (-$32/mês)
 
 ---
 
 ## 🚀 Melhorias Futuras
 
-- [ ] **Segurança**: Migrar credenciais para AWS Secrets Manager
-- [ ] **Observabilidade**: Implementar X-Ray tracing
-- [ ] **Performance**: Adicionar ElastiCache Redis
-- [ ] **Escalabilidade**: Auto Scaling para ECS
-- [ ] **Segurança**: WAF no CloudFront
-- [ ] **Backup**: Snapshots automáticos do RDS
-- [ ] **Notificações**: SNS para alertas
-- [ ] **Blue/Green**: Deploy sem downtime
+### Segurança
+- [ ] Migrar credenciais para AWS Secrets Manager
+- [ ] Implementar WAF no CloudFront
+- [ ] Habilitar encryption at rest no RDS
+- [ ] Adicionar HTTPS redirect no ALB
+
+### Observabilidade
+- [ ] Implementar X-Ray para tracing
+- [ ] Criar CloudWatch Alarms
+- [ ] Configurar SNS para notificações
+- [ ] Habilitar Container Insights
+
+### Escalabilidade
+- [ ] Configurar Auto Scaling (1-3 tasks)
+- [ ] Implementar Application Auto Scaling policies
+- [ ] Considerar Aurora Serverless para RDS
+- [ ] Adicionar ElastiCache Redis
+
+### CI/CD
+- [ ] Implementar testes unitários
+- [ ] Adicionar análise de código (SonarQube)
+- [ ] Deploy canário ou blue/green
+- [ ] Rollback automático baseado em métricas
 
 ---
 
 ## 🧹 Limpeza de Recursos
 
 ```bash
-# Destruir infraestrutura
+# Destruir toda a infraestrutura
 cd infra
 terraform destroy -auto-approve
 
 # Limpar buckets S3 manualmente (se necessário)
 aws s3 rm s3://app-cicd-frontend-staging --recursive
 aws s3 rm s3://app-cicd-frontend-prod --recursive
+aws s3 rb s3://app-cicd-frontend-staging
+aws s3 rb s3://app-cicd-frontend-prod
+
+# Remover imagens ECR
+aws ecr delete-repository --repository-name app-cicd-backend --force
 ```
 
 ---
 
 ## 📚 Tecnologias Utilizadas
 
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
-- **Backend**: Node.js, Express.js, PostgreSQL
-- **Infraestrutura**: AWS (ECS, S3, CloudFront, RDS, ALB)
-- **IaC**: Terraform
-- **CI/CD**: GitHub Actions
-- **Testes**: Cypress E2E
-- **Monitoramento**: CloudWatch
-- **SSL/TLS**: AWS Certificate Manager
+### Frontend
+- **HTML5, CSS3, JavaScript** (Vanilla)
+- **Amazon S3** (Hospedagem estática)
+- **CloudFront** (CDN)
+
+### Backend
+- **Node.js** (Runtime)
+- **Express.js** (Framework web)
+- **PostgreSQL** (Banco de dados)
+- **Docker** (Containerização)
+
+### Infraestrutura
+- **AWS ECS Fargate** (Orquestração)
+- **AWS RDS** (Banco gerenciado)
+- **AWS ALB** (Load balancer)
+- **AWS VPC** (Rede)
+- **Terraform** (IaC)
+
+### CI/CD
+- **GitHub Actions** (Pipeline)
+- **Cypress** (Testes E2E)
+- **AWS ECR** (Registry)
+
+### Monitoramento
+- **CloudWatch** (Logs e métricas)
+- **AWS Health Checks** (Monitoramento)
 
 ---
 
@@ -356,8 +556,40 @@ aws s3 rm s3://app-cicd-frontend-prod --recursive
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT.
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
+
+## 🤝 Contribuições
+
+Contribuições são bem-vindas! Por favor:
+
+1. Faça fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
 
 ---
 
 ⭐ **Se este projeto foi útil, considere dar uma estrela no GitHub!**
+
+---
+
+## 📋 Changelog
+
+### v2.1.0 (2024-11-15)
+- ✅ Pipeline CI/CD completo implementado
+- ✅ Múltiplos ambientes (staging/prod)
+- ✅ Testes E2E automatizados
+- ✅ Aprovação manual para produção
+- ✅ Infraestrutura como código
+- ✅ Documentação completa
+
+### v2.0.0 (2024-11-14)
+- 🔄 Migração de app-task para app-cicd
+- 🚀 Foco em pipeline completo
+- 📊 Monitoramento aprimorado
+
+### v1.0.0 (2024-11-13)
+- 🎉 Versão inicial do projeto
