@@ -8,7 +8,12 @@ const API_URL = `${API_BASE_URL}/tasks`;
 
 function loadTasks() {
   fetch(API_URL)
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      return res.json();
+    })
     .then(tasks => {
       taskList.innerHTML = "";
       tasks.forEach(task => {
@@ -29,6 +34,10 @@ function loadTasks() {
         li.appendChild(delBtn);
         taskList.appendChild(li);
       });
+    })
+    .catch(error => {
+      console.warn('Error loading tasks:', error);
+      // Não fazer nada, apenas log do erro
     });
 }
 
@@ -44,6 +53,9 @@ form.addEventListener("submit", e => {
     .then(() => {
       input.value = "";
       loadTasks();
+    })
+    .catch(error => {
+      console.warn('Error creating task:', error);
     });
 });
 
@@ -52,11 +64,15 @@ function toggleTask(id, completed) {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ completed })
-  }).then(() => loadTasks());
+  })
+  .then(() => loadTasks())
+  .catch(error => console.warn('Error toggling task:', error));
 }
 
 function deleteTask(id) {
-  fetch(`${API_URL}/${id}`, { method: "DELETE" }).then(() => loadTasks());
+  fetch(`${API_URL}/${id}`, { method: "DELETE" })
+  .then(() => loadTasks())
+  .catch(error => console.warn('Error deleting task:', error));
 }
 
 loadTasks();

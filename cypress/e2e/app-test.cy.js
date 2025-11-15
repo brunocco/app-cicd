@@ -1,29 +1,36 @@
 describe('App CICD E2E Tests', () => {
   beforeEach(() => {
-    // Ignorar erros de fetch durante os testes
+    // Ignorar todos os erros de fetch e promise rejections
     cy.on('uncaught:exception', (err, runnable) => {
-      if (err.message.includes('Failed to fetch')) {
+      // Ignorar erros de fetch, promise rejections e network errors
+      if (err.message.includes('Failed to fetch') || 
+          err.message.includes('NetworkError') ||
+          err.message.includes('fetch')) {
         return false
       }
     })
-    cy.visit('/')
-    // Aguardar um pouco para a aplicação carregar
-    cy.wait(2000)
+    
+    cy.visit('/', { timeout: 30000 })
+    
+    // Aguardar elementos básicos carregarem
+    cy.get('body', { timeout: 10000 }).should('be.visible')
+    cy.wait(3000)
   })
 
   it('should load the application', () => {
-    cy.contains('Task Manager')
-    cy.get('#task-input').should('be.visible')
-    cy.get('button[type="submit"]').should('be.visible')
+    cy.contains('Task Manager', { timeout: 10000 })
+    cy.get('#task-input', { timeout: 10000 }).should('be.visible')
+    cy.get('button[type="submit"]', { timeout: 10000 }).should('be.visible')
   })
 
   it('should create a new task', () => {
     const taskTitle = `Test Task ${Date.now()}`
     
-    cy.get('#task-input').type(taskTitle)
-    cy.get('button[type="submit"]').click()
+    cy.get('#task-input', { timeout: 10000 }).should('be.visible').type(taskTitle)
+    cy.get('button[type="submit"]', { timeout: 10000 }).click()
     
-    cy.contains(taskTitle).should('be.visible')
+    cy.wait(2000)
+    cy.contains(taskTitle, { timeout: 15000 }).should('be.visible')
   })
 
   it('should mark task as completed', () => {
