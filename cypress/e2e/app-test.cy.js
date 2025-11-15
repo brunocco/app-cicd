@@ -27,7 +27,7 @@ describe('App CICD E2E Tests', () => {
     // Primeiro testar se a API responde
     cy.request({
       method: 'GET',
-      url: '/api/tasks',
+      url: 'https://d128yqhncqex8w.cloudfront.net/api/tasks',
       failOnStatusCode: false
     }).then((response) => {
       cy.log('API Status:', response.status)
