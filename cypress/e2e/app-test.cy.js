@@ -5,7 +5,7 @@ describe('App CICD E2E Tests', () => {
     
     cy.visit('/', { timeout: 30000 })
     cy.get('body', { timeout: 10000 }).should('be.visible')
-    cy.wait(5000) // Aguardar mais tempo para a aplicação carregar
+    cy.wait(5000)
   })
 
   it('should load the application', () => {
@@ -16,7 +16,7 @@ describe('App CICD E2E Tests', () => {
     // Testar se a API está respondendo
     cy.request({
       method: 'GET',
-      url: 'https://staging.buildcloud.com.br/api/tasks',
+      url: 'https://d128yqhncqex8w.cloudfront.net/api/tasks',
       failOnStatusCode: false
     }).then((response) => {
       cy.log('API Response:', response.status)
@@ -39,7 +39,7 @@ describe('App CICD E2E Tests', () => {
         cy.get('#task-input', { timeout: 15000 }).should('be.visible').clear().type(taskTitle)
         cy.get('button[type="submit"]', { timeout: 10000 }).click()
         
-        cy.wait(8000) // Aguardar mais tempo
+        cy.wait(8000)
         cy.get('body').then(($body) => {
           if ($body.text().includes(taskTitle)) {
             cy.contains(taskTitle).should('be.visible')
@@ -52,8 +52,4 @@ describe('App CICD E2E Tests', () => {
       }
     })
   })
-
-
-
-
 })
