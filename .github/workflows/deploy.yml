@@ -49,10 +49,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Update frontend for staging
-        run: |
-          # Atualizar app.js para apontar para o ALB de staging
-          sed -i 's|const API_BASE_URL = ".*"|const API_BASE_URL = "http://app-cicd-alb-staging-${{ secrets.AWS_ACCOUNT_ID }}.us-east-1.elb.amazonaws.com"|g' frontend/app.js
+
 
       - name: Deploy to S3 Staging
         run: |
@@ -176,10 +173,6 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       # Deploy Frontend para Produção
-      - name: Update frontend for production
-        run: |
-          # Atualizar app.js para apontar para o ALB de produção
-          sed -i 's|const API_BASE_URL = ".*"|const API_BASE_URL = "http://app-cicd-alb-prod-${{ secrets.AWS_ACCOUNT_ID }}.us-east-1.elb.amazonaws.com"|g' frontend/app.js
 
       - name: Deploy Frontend to S3 Production
         run: |
