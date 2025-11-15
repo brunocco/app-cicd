@@ -80,8 +80,6 @@ git push origin main
 Os testes Cypress validam:
 - ✅ Carregamento da aplicação
 - ✅ Criação de tarefa
-- ✅ Marcação como concluída
-- ✅ Exclusão de tarefa
 
 ## 💰 Custos Estimados
 

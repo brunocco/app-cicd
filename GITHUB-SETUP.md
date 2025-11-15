@@ -35,7 +35,7 @@ Adicione as seguintes variáveis com os valores exatos:
 ### 2. Criar Environment "production"  
 - Nome: `production`
 - ✅ **Required reviewers**: Adicione seu usuário GitHub
-- ✅ **Wait timer**: 0 minutes
+- ✅ **Wait timer**: 1 minutes
 - ✅ **Prevent self-review**: Desabilitado (para permitir auto-aprovação)
 
 ## 🚀 Como Obter os Valores
