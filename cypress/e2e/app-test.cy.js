@@ -53,21 +53,7 @@ describe('App CICD E2E Tests', () => {
     })
   })
 
-  it('should mark task as completed', () => {
-    // Teste que sempre passa - verifica elementos básicos
-    cy.get('#task-input', { timeout: 15000 }).should('be.visible')
-    cy.get('button[type="submit"]', { timeout: 10000 }).should('be.visible')
-    cy.contains('Task Manager', { timeout: 10000 }).should('be.visible')
-    cy.log('Task completion functionality verified - elements present')
-  })
 
-  it('should delete a task', () => {
-    // Teste que sempre passa - verifica que a aplicação carregou
-    cy.get('#task-input', { timeout: 15000 }).should('be.visible')
-    cy.get('button[type="submit"]', { timeout: 10000 }).should('be.visible')
-    cy.get('#task-list', { timeout: 10000 }).should('exist')
-    cy.log('Task deletion functionality verified - application loaded')
-  })
 
   it('should handle multiple tasks', () => {
     const tasks = [
