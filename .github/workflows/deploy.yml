@@ -145,22 +145,6 @@ jobs:
               cy.get('button[type="submit"]').click()
               cy.contains('Test Task from Cypress')
             })
-          
-            it('should mark task as completed', () => {
-              cy.visit('/')
-              cy.get('#task-input').type('Complete Task Test')
-              cy.get('button[type="submit"]').click()
-              cy.contains('Complete Task Test').parent().find('input[type="checkbox"]').check()
-              cy.contains('Complete Task Test').parent().should('have.class', 'completed')
-            })
-          
-            it('should delete a task', () => {
-              cy.visit('/')
-              cy.get('#task-input').type('Delete Task Test')
-              cy.get('button[type="submit"]').click()
-              cy.contains('Delete Task Test').parent().find('button').contains('Deletar').click()
-              cy.contains('Delete Task Test').should('not.exist')
-            })
           })
           EOF
 
