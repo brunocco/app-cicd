@@ -1,37 +1,53 @@
-# Amazon Q Jarvis - Projeto app-task
+# Amazon Q Jarvis - Projeto app-cicd
 
-Agente de IA DevOps do projeto **app-task**, responsável por apoiar na automação, provisionamento e manutenção da infraestrutura AWS do projeto.
+Agente de IA DevOps do projeto **app-cicd**, responsável por apoiar na automação, provisionamento e manutenção da infraestrutura AWS do projeto.
 
 ## 🧩 Stack AWS
 
-### Computação
-- **ECS Fargate** com 2 serviços independentes (frontend e backend)
-- **ECR** com 2 repositórios privados (app-task-backend e app-task-frontend)
-- Task Definitions: 256 CPU / 512 MB RAM por serviço
+### Frontend (Estático)
+- **Amazon S3**: 2 buckets para hospedagem estática (staging/prod)
+- **CloudFront**: CDN global com certificados SSL/TLS existentes
+- **ACM**: Certificados wildcard pré-existentes para buildcloud.com.br
+- **Route53**: DNS com registros A/CNAME para domínios personalizados
+- **Domínios**: staging.buildcloud.com.br e www.buildcloud.com.br
 
-### Rede
-- **VPC** customizada (10.0.0.0/16) com DNS habilitado
-- **4 Subnets**: 2 públicas (us-east-1a, us-east-1b) + 2 privadas (us-east-1a, us-east-1b)
-- **2 NAT Gateways** (alta disponibilidade, 1 por AZ)
-- **Internet Gateway** para acesso público
-- **Application Load Balancer** com path-based routing:
-  - `/` → Frontend (porta 80)
-  - `/tasks*` → Backend (porta 3000)
-- **4 Security Groups** segregados (ALB, ECS Backend, ECS Frontend, RDS)
+### Backend (Containerizado)
+- **Amazon ECS Fargate**: Orquestração serverless (2 ambientes independentes)
+- **Application Load Balancer**: 2 ALBs com path-based routing (/api/*)
+- **Amazon ECR**: 1 repositório para imagens Docker do backend
+- **Capacidade**: 1 task por ambiente (256 CPU / 512 MB RAM)
 
 ### Banco de Dados
-- **RDS PostgreSQL 17** (db.t3.micro, 20GB gp2)
-- Conexão SSL obrigatória
-- Subnets privadas com acesso apenas do backend
+- **Amazon RDS PostgreSQL 17**: 2 instâncias independentes (t3.micro, 20GB gp2)
+- **Multi-AZ**: Configurado para alta disponibilidade
+- **SSL**: Conexão obrigatória com rejectUnauthorized: false
+
+### Rede (Compartilhada)
+- **VPC**: 10.0.0.0/16 com DNS habilitado
+- **Subnets Públicas**: 10.0.1.0/24 (us-east-1a) e 10.0.2.0/24 (us-east-1b)
+- **Subnets Privadas**: 10.0.3.0/24 (us-east-1a) e 10.0.4.0/24 (us-east-1b)
+- **2 NAT Gateways**: 1 por AZ para alta disponibilidade
+- **Internet Gateway**: Para conectividade externa
+
+### CI/CD
+- **GitHub Actions**: Pipeline completo com detecção de mudanças
+- **Cypress**: Testes E2E automatizados (2 testes)
+- **Aprovação Manual**: Deploy para produção requer aprovação
 
 ### Observabilidade
-- **CloudWatch Logs**: `/ecs/app-task/backend` e `/ecs/app-task/frontend`
-- Retenção: 7 dias
+- **CloudWatch Log Groups**:
+  - `/ecs/app-cicd/backend/staging`
+  - `/ecs/app-cicd/backend/prod`
+- **Retenção**: 7 dias
+- **Log Driver**: awslogs
+- **Health Checks**: Configurados em ALB e ECS
 
 ### Segurança
-- **IAM Role** para ECS Task Execution
-- Security Groups com princípio de menor privilégio
-- RDS em subnets privadas sem acesso público
+- **Security Groups** com princípio de menor privilégio
+- **RDS** em subnets privadas sem acesso público
+- **CloudFront** com Origin Access Control
+- **S3 buckets** com acesso restrito
+- **IAM Role**: app-cicd-execution-role
 
 ## 🐳 Containers
 
@@ -43,26 +59,33 @@ Agente de IA DevOps do projeto **app-task**, responsável por apoiar na automaç
 - **Variáveis de ambiente**: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT
 
 ### Frontend
-- **Imagem**: `nginx:alpine`
-- **Porta**: 80
-- **Arquivos**: HTML + JavaScript vanilla
-- **API**: Requisições para `/tasks` (roteadas pelo ALB para o backend)
+- **Hospedagem**: S3 + CloudFront (não usa mais Docker)
+- **Arquivos estáticos**: HTML, CSS, JS servidos pelo S3
+- **CDN**: CloudFront para cache e HTTPS
+- **API**: Requisições para `/api/*` (roteadas pelo CloudFront para o ALB)
 
 ## 🧱 Infraestrutura como Código
 
 O projeto utiliza **Terraform** para criação e gerenciamento de:
-- VPC com 4 subnets (2 públicas + 2 privadas)
-- 2 NAT Gateways + Internet Gateway
-- 4 Route Tables com associações
-- ECS Cluster + 2 Services + 2 Task Definitions
-- 2 ECR Repositories
-- RDS PostgreSQL com Subnet Group
-- ALB + 2 Target Groups + Listener + Listener Rule
-- 4 Security Groups
-- IAM Role + Policy Attachment
-- 2 CloudWatch Log Groups
+- **VPC e Subnets** (4 subnets em 2 AZs)
+- **Internet Gateway + NAT Gateways** (2 NATs)
+- **Route Tables** (1 pública + 2 privadas)
+- **S3 Buckets + Website Configuration** (2 buckets)
+- **CloudFront Origin Access Control** (2 OACs)
+- **CloudFront Distributions** (2 distribuições)
+- **S3 Bucket Policies** (acesso via CloudFront)
+- **Route53 Records** (DNS para domínios)
+- **Security Groups** (3 grupos)
+- **Application Load Balancers** (2 ALBs)
+- **Target Groups + Listeners** (2 TGs)
+- **ECS Cluster** (compartilhado)
+- **RDS Subnet Group + Instances** (2 instâncias)
+- **IAM Role + Policy Attachment**
+- **CloudWatch Log Groups** (2 grupos)
+- **ECS Task Definitions** (2 definições)
+- **ECS Services** (2 serviços)
 
-**Arquivo principal**: `infra/main.tf` (~550 linhas)
+**Arquivo principal**: `infra/main.tf` (~800 linhas)
 
 ## 📋 Regras de Infraestrutura
 
@@ -80,10 +103,16 @@ Conexão com banco de dados local (Docker Compose)
 postgresql://postgres:postgres@localhost:5432/tasksdb
 ```
 
-### postgres-aws
-Conexão com RDS na AWS (requer SSL)
+### postgres-aws-staging
+Conexão com RDS Staging na AWS (requer SSL)
 ```bash
-postgresql://postgres:postgres@app-task-db.cmhcko6u60nk.us-east-1.rds.amazonaws.com:5432/tasksdb?sslmode=require
+postgresql://postgres:postgres@app-cicd-db-staging.cmhcko6u60nk.us-east-1.rds.amazonaws.com:5432/tasksdb?sslmode=require
+```
+
+### postgres-aws-prod
+Conexão com RDS Production na AWS (requer SSL)
+```bash
+postgresql://postgres:postgres@app-cicd-db-prod.cmhcko6u60nk.us-east-1.rds.amazonaws.com:5432/tasksdb?sslmode=require
 ```
 
 ### awslabs.ecs-mcp-server
@@ -93,19 +122,19 @@ Integração com ECS para gerenciamento de serviços e tasks
 ### Ambiente:
  1. Crie um role SSM:
     - AWS service/ EC2
-    - Nome: app-task-role-ssm
+    - Nome: app-cicd-role-ssm
     - Política: AmazonSSMamagedInstanceCore
 >OBS: caso queria que o Agente tenha nivel mais elevado em sua aplicacao como manipular a aplicacao, criacao de servicos entre outros vc tera que acrescentar mais policitas de acondo com o servico que queria que ele manipule. não adiicone policita admin, adicione apenas as policitas dos servicos que vc queira que ele manipule.
 
  2. Crie uma instância Linux free tier: 
-    - Nome: app-task-instance-jarvis
+    - Nome: app-cicd-instance-jarvis
     - Linux free tier
     - t2 micro free tier
-    - Security group do Alb da aplicação: app-task-alb (isso dará acesso ao Agente na aplicação)
-    - VPC da aplicação
+    - Security group do ALB da aplicação: app-cicd-alb-sg (isso dará acesso ao Agente na aplicação)
+    - VPC da aplicação: app-cicd-vpc
     - Sem par de chaves
     - Storage: 15GB
-    - Advanced Dateils: Adicione a role ssm criada anteriormente
+    - Advanced Details: Adicione a role ssm criada anteriormente
     - Adicione esse user data pra instalar tudo que precisaremos:
 ```bash
 #!/bin/bash
@@ -234,7 +263,7 @@ git clone CODIGO_DO_CLONE_SSG_DE_SEU_SEPORITORIO
 ls
 
 #Entre no projeto
-cd app_task
+cd app-cicd
 
 #Entre na pasta do agente Jarvis:
 cd .amazonq/
@@ -255,7 +284,7 @@ Ctrl + X
 
 # Em rules tem as regras para o Agente Seguir(recomentdo que leia para entender as regras e informações que ele terá como base)
 
-# Volte a pasta raiz app-task:
+# Volte a pasta raiz app-cicd:
 cd ..
 cd ..
 
