@@ -2,7 +2,7 @@ const taskList = document.getElementById("task-list");
 const form = document.getElementById("task-form");
 const input = document.getElementById("task-input");
 
-// API Configuration - Using CloudFront proxy (v2.1 - Final)
+// API Configuration - Using CloudFront proxy (v2.1 - Final) - test
 const API_BASE_URL = "https://staging.buildcloud.com.br/api";
 const API_URL = `${API_BASE_URL}/tasks`;
 
