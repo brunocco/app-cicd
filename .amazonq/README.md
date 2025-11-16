@@ -230,8 +230,8 @@ ssh-keygen
     - Configuração de usuário,nome e e-mail pro git:
     - Você terá que fazer um fork do meu repositorio ou clonar, se fizer fork tera que remover o origin remoto no ec2. Se clonou meu repositorio, criou um novo repositorio em seu git e fez o push em seu repositorio é so seguir normalmente os passos seguintes.
 ```bash
-git config --global user name "seu nome"
-git config --global user email "seu email"
+git config --global user.name "seu nome"
+git config --global user.email "seu email"
 ```
     - Configure do git:
 ```bash

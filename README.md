@@ -22,28 +22,28 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                     GitHub Actions CI/CD                    │
 ├─────────────────────────────────────────────────────────────┤
-│  1. Detect Changes → 2. Deploy Staging → 3. E2E Tests      │
-│                    → 4. Manual Approval → 5. Deploy Prod   │
+│  1. Detect Changes → 2. Deploy Staging → 3. E2E Tests       │
+│                    → 4. Manual Approval → 5. Deploy Prod    │
 └─────────────────────────────────────────────────────────────┘
                                 ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                        AWS Cloud                            │
 ├─────────────────────────────────────────────────────────────┤
-│  Route53 DNS                                               │
-│  ├── staging.buildcloud.com.br → CloudFront (Staging)      │
-│  └── www.buildcloud.com.br → CloudFront (Production)       │
+│  Route53 DNS                                                │
+│  ├── staging.buildcloud.com.br → CloudFront (Staging)       │
+│  └── www.buildcloud.com.br → CloudFront (Production)        │
 │                                ↓                            │
-│  CloudFront + ACM (SSL)                                    │
-│  ├── S3 Bucket (Frontend Staging)                         │
-│  └── S3 Bucket (Frontend Production)                      │
+│  CloudFront + ACM (SSL)                                     │
+│  ├── S3 Bucket (Frontend Staging)                           │
+│  └── S3 Bucket (Frontend Production)                        │
 │                                ↓                            │
-│  Application Load Balancer                                 │
-│  ├── ALB Staging → ECS Backend Staging                     │
-│  └── ALB Production → ECS Backend Production               │
+│  Application Load Balancer                                  │
+│  ├── ALB Staging → ECS Backend Staging                      │
+│  └── ALB Production → ECS Backend Production                │
 │                                ↓                            │
-│  ECS Fargate (Backend)                                     │
-│  ├── Task Staging → RDS PostgreSQL Staging                │
-│  └── Task Production → RDS PostgreSQL Production          │
+│  ECS Fargate (Backend)                                      │
+│  ├── Task Staging → RDS PostgreSQL Staging                  │
+│  └── Task Production → RDS PostgreSQL Production            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -53,7 +53,7 @@
 
 ```
 app-cicd/
-├── .github/workflows/           # GitHub Actions CI/CD
+├── .github/workflows/          # GitHub Actions CI/CD
 │   └── deploy.yml              # Pipeline principal
 ├── .amazonq/                   # Configurações Amazon Q (IA)
 │   ├── rules/                  # Regras de infraestrutura
@@ -64,26 +64,22 @@ app-cicd/
 │   └── README.md               # Documentação Amazon Q
 ├── backend/                    # API REST Node.js
 │   ├── migrations/             # Scripts SQL
-│   ├── app.js                 # Servidor Express
-│   ├── Dockerfile             # Container backend
-│   └── package.json           # Dependências Node.js
+│   ├── app.js                  # Servidor Express
+│   ├── Dockerfile              # Container backend
+│   └── package.json            # Dependências Node.js
 ├── frontend/                   # Interface web estática
-│   ├── index.html             # Interface HTML
-│   ├── app.js                 # Lógica JavaScript
-│   └── Dockerfile             # Container frontend (opcional)
-├── infra/                     # Infraestrutura Terraform
-│   └── main.tf                # Configuração completa AWS
-├── cypress/                   # Testes E2E
+│   ├── index.html              # Interface HTML
+│   ├── app.js                  # Lógica JavaScript
+│   └── Dockerfile              # Container frontend (opcional)
+├── infra/                      # Infraestrutura Terraform
+│   └── main.tf                 # Configuração completa AWS
+├── cypress/                    # Testes E2E
 │   └── e2e/
-│       └── app-test.cy.js     # Testes automatizados
-├── cypress.config.js          # Configuração Cypress
-├── deploy.bat                 # Deploy manual Windows (opcional)
-├── deploy.sh                  # Deploy manual Linux (opcional)
-├── CERTIFICADOS-EXISTENTES.md # Documentação certificados (opcional)
-├── GITHUB-SETUP.md            # Setup GitHub Actions (opcional)
-├── ROUTE53-SETUP.md           # Configuração DNS (opcional)
-├── RESUMO-CONFIGURACAO.md     # Resumo técnico (opcional)
-└── README.md                  # Esta documentação
+│       └── app-test.cy.js      # Testes automatizados
+├── cypress.config.js           # Configuração Cypress
+├── deploy.bat                  # Deploy manual Windows (opcional)
+├── deploy.sh                   # Deploy manual Linux (opcional)
+└── README.md                   # Esta documentação
 ```
 
 ---
@@ -171,11 +167,13 @@ O pipeline é **automaticamente disparado** quando há push de mudanças em:
 - 🔧 **Docker** para testes locais
 - 🔧 **Node.js** para desenvolvimento local
 
+> Troque os meus dominios Staging: staging.buildcloud.com.br e Produção: www.buildcloud.coom.br pelos seus Dominios ou subdominions ja certificados aprovados.
+
 ### 2️⃣ Clone e Configuração Inicial
 
 ```bash
 # Clone o repositório
-git clone https://github.com/brunocco/app-cicd.git
+git clone https://github.com/brunocco/app-cicd-public.git
 cd app-cicd
 
 # Configure suas credenciais AWS
@@ -221,7 +219,7 @@ variable "domain_names" {
 
 # Atualizar ARN do certificado
 locals {
-  cert_arn = "arn:aws:acm:us-east-1:SEU_ACCOUNT:certificate/SEU_CERT_ID"  # ← Alterar
+  cert_arn = "arn:aws:acm:us-east-1:<SEU_ID_USUARIOAWS>:certificate/SEU_CERT_ID"  # ← Alterar
 }
 
 # Atualizar zona do Route53
@@ -230,6 +228,11 @@ data "aws_route53_zone" "main" {
   private_zone = false
 }
 ```
+
+**⚠️ IMPORTANTE**: 
+- Substitua `<SEU_ID_USUARIOAWS>` pelo seu AWS Account ID em todos os locais do projeto onde aparecer.
+- Substitua `<SUA_SENHA_DB>` por uma senha segura para o banco PostgreSQL (mínimo 8 caracteres).
+- Os arquivos `*.tfstate` e `*.backup` estão no `.gitignore` e não serão enviados para o GitHub (contêm informações sensíveis).
 
 ### 5️⃣ Provisionar Infraestrutura
 
@@ -414,37 +417,33 @@ aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/
 
 ## 📸 Screenshots do Pipeline
 
-### 1. ECS Services e Tasks Backend Staging Rodando
-![ECS Staging](docs/images/ecs-staging-running.png)
-*Serviços ECS do backend staging em execução com tasks saudáveis*
-
-### 2. Aplicação Staging Funcionando
-![App Staging](docs/images/app-staging-working.png)
-*Interface da aplicação funcionando em https://staging.buildcloud.com.br*
-
-### 3. Resource Map ALB Staging
-![ALB Staging](docs/images/alb-staging-resource-map.png)
-*Load Balancer staging com domínio configurado e targets saudáveis*
-
-### 4. Pipeline Completa Esperando Aprovação
+### 1. Pipeline Completa Esperando Aprovação
 ![Pipeline Waiting](docs/images/pipeline-waiting-approval.png)
 *Pipeline executada com sucesso aguardando aprovação manual para produção*
 
-### 5. Pipeline Completa Terminada
+### 2. Pipeline Completa Terminada
 ![Pipeline Complete](docs/images/pipeline-complete.png)
 *Pipeline totalmente executada após aprovação com todos os checkmarks verdes*
 
-### 6. ECS Services e Tasks Backend Prod Rodando
-![ECS Prod](docs/images/ecs-prod-running.png)
-*Serviços ECS do backend produção em execução*
+### 3. ECS Services e Tasks Backend Staging e Produção Rodando
+![ECS Staging](docs/images/ecs-staging-running.png)
+*Serviços ECS do backend staging e produção em execução com tasks saudáveis*
+
+### 4. Resource Map ALB Staging
+![ALB Staging](docs/images/alb-staging-resource-map.png)
+*Load Balancer staging com domínio configurado e targets saudáveis*
+
+### 5. Resource Map ALB Prod
+![ALB Prod](docs/images/alb-prod-resource-map.png)
+*Load Balancer produção com domínio configurado*
+
+### 6. Aplicação Staging Rodando
+![App Staging](docs/images/app-staging-working.png)
+*Interface da aplicação funcionando em https://staging.buildcloud.com.br*
 
 ### 7. Aplicação Prod Rodando
 ![App Prod](docs/images/app-prod-working.png)
 *Aplicação funcionando em produção em https://www.buildcloud.com.br*
-
-### 8. Resource Map ALB Prod
-![ALB Prod](docs/images/alb-prod-resource-map.png)
-*Load Balancer produção com domínio configurado*
 
 ---
 
@@ -550,7 +549,7 @@ aws ecr delete-repository --repository-name app-cicd-backend --force
 **Bruno Cesar**
 - 📧 Email: bruno_cco@hotmail.com
 - 💼 LinkedIn: [bruno-cesar-704265223](https://www.linkedin.com/in/bruno-cesar-704265223/)
-- 🐙 GitHub: [brunocco](https://github.com/brunocco)
+- 🐙 Medium: [brunosherlocked](https://medium.com/@brunosherlocked)
 
 ---
 

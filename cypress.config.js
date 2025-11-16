@@ -2,7 +2,7 @@ const { defineConfig } = require('cypress')
 
 module.exports = defineConfig({
   e2e: {
-    baseUrl: 'https://d128yqhncqex8w.cloudfront.net',
+    baseUrl: 'https://staging.buildcloud.com.br',
     supportFile: false,
     video: false,
     screenshot: false,

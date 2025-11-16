@@ -201,7 +201,7 @@ resource "aws_route_table_association" "private_1b" {
 # -------------------------------
 locals {
   # ARN do certificado wildcard existente
-  cert_arn = "arn:aws:acm:us-east-1:886436950673:certificate/62229f39-5889-4c06-81a9-70acd98cd380"
+  cert_arn = "arn:aws:acm:us-east-1:<SEU_ID_USUARIOAWS>:certificate/62229f39-5889-4c06-81a9-70acd98cd380"
 }
 
 # -------------------------------
@@ -586,7 +586,7 @@ resource "aws_db_instance" "app_cicd" {
   allocated_storage      = 20
   db_name                = "tasksdb"
   username               = "postgres"
-  password               = "postgres123"
+  password               = "<SUA_SENHA_DB>"
   port                   = 5432
   publicly_accessible    = false
   storage_type           = "gp2"
@@ -676,7 +676,7 @@ resource "aws_ecs_task_definition" "backend" {
       environment = [
         { name = "DB_HOST", value = aws_db_instance.app_cicd[each.key].address },
         { name = "DB_USER", value = "postgres" },
-        { name = "DB_PASSWORD", value = "postgres123" },
+        { name = "DB_PASSWORD", value = "<SUA_SENHA_DB>" },
         { name = "DB_NAME", value = "tasksdb" },
         { name = "DB_PORT", value = "5432" }
       ]
