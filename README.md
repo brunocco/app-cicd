@@ -439,10 +439,12 @@ aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/
 
 ### 6. Aplicação Staging Rodando
 ![App Staging](docs/images/app-staging-working.png)
+
 *Interface da aplicação funcionando em https://staging.buildcloud.com.br*
 
 ### 7. Aplicação Prod Rodando
 ![App Prod](docs/images/app-prod-working.png)
+
 *Aplicação funcionando em produção em https://www.buildcloud.com.br*
 
 ---
